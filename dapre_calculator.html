@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAPRE Weight Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .notes {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>DAPRE Weight Calculator</h1>
+    <div class="container">
+        <label for="sixRM">Enter 6-Rep Max (6RM) Weight (in lbs or kg):</label>
+        <input type="number" id="sixRM" min="1" step="0.1" placeholder="e.g., 100">
+        <button onclick="calculateDAPRE()">Calculate DAPRE Weights</button>
+        <div id="error" class="error"></div>
+        <table id="results" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Set</th>
+                    <th>Weight</th>
+                    <th>Reps</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+        <div class="notes" id="notes">
+            <p><strong>How DAPRE Works:</strong></p>
+            <ul>
+                <li><strong>Working Weight:</strong> Approximately 75% of your 6RM for Set 3 (adjusted to the nearest 5 lbs/kg for simplicity).</li>
+                <li><strong>Set 1:</strong> 50% of working weight, 10 reps.</li>
+                <li><strong>Set 2:</strong> 75% of working weight, 6 reps.</li>
+                <li><strong>Set 3:</strong> Full working weight, max reps (typically 6-10).</li>
+                <li><strong>Set 4:</strong> Adjusted weight based on Set 3 reps, max reps.</li>
+                <li><strong>Adjustment Rules for Set 4:</strong>
+                    <ul>
+                        <li>0-2 reps in Set 3: Decrease by 5-10 lbs/kg.</li>
+                        <li>3-4 reps: Decrease by 0-5 lbs/kg.</li>
+                        <li>5-7 reps: Same weight.</li>
+                        <li>8-12 reps: Increase by 5-10 lbs/kg.</li>
+                        <li>13+ reps: Increase by 10-15 lbs/kg.</li>
+                    </ul>
+                </li>
+                <li><strong>Next Session:</strong> Use Set 4 weight as the new working weight if reps in Set 3 were 5-12.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function calculateDAPRE() {
+            const sixRMInput = document.getElementById('sixRM').value;
+            const errorDiv = document.getElementById('error');
+            const resultsTable = document.getElementById('results');
+            const resultsBody = document.getElementById('resultsBody');
+
+            // Clear previous results and errors
+            errorDiv.textContent = '';
+            resultsBody.innerHTML = '';
+            resultsTable.style.display = 'none';
+
+            // Validate input
+            const sixRM = parseFloat(sixRMInput);
+            if (isNaN(sixRM) || sixRM <= 0) {
+                errorDiv.textContent = 'Please enter a valid 6RM weight greater than 0.';
+                return;
+            }
+
+            // Calculate working weight (75% of 6RM, rounded to nearest 5)
+            const workingWeight = Math.round((sixRM * 0.75) / 5) * 5;
+
+            // Calculate weights for each set
+            const set1Weight = Math.round((workingWeight * 0.5) / 5) * 5;
+            const set2Weight = Math.round((workingWeight * 0.75) / 5) * 5;
+            const set3Weight = workingWeight;
+
+            // Placeholder for Set 4 (will explain adjustment)
+            const set4Adjustments = [
+                { reps: '0-2', adjustment: 'Decrease 5-10', example: Math.round((workingWeight - 7.5) / 5) * 5 },
+                { reps: '3-4', adjustment: 'Decrease 0-5', example: Math.round((workingWeight - 2.5) / 5) * 5 },
+                { reps: '5-7', adjustment: 'Same', example: workingWeight },
+                { reps: '8-12', adjustment: 'Increase 5-10', example: Math.round((workingWeight + 7.5) / 5) * 5 },
+                { reps: '13+', adjustment: 'Increase 10-15', example: Math.round((workingWeight + 12.5) / 5) * 5 }
+            ];
+
+            // Populate table
+            const sets = [
+                { set: 1, weight: set1Weight, reps: '10', notes: 'Warm-up set' },
+                { set: 2, weight: set2Weight, reps: '6', notes: 'Preparation set' },
+                { set: 3, weight: set3Weight, reps: 'Max (6-10)', notes: 'Main working set; perform as many reps as possible' },
+            ];
+
+            sets.forEach(s => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${s.set}</td>
+                    <td>${s.weight}</td>
+                    <td>${s.reps}</td>
+                    <td>${s.notes}</td>
+                `;
+                resultsBody.appendChild(row);
+            });
+
+            // Add Set 4 with adjustment options
+            set4Adjustments.forEach(adj => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>4</td>
+                    <td>${adj.example}</td>
+                    <td>Max</td>
+                    <td>If Set 3 = ${adj.reps} reps: ${adj.adjustment}</td>
+                `;
+                resultsBody.appendChild(row);
+            });
+
+            // Show results
+            resultsTable.style.display = 'table';
+        }
+    </script>
+</body>
+</html>
+
+ 
